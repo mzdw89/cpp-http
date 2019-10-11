@@ -7,13 +7,13 @@
 namespace forceinline {
 	namespace http {
 		struct headers {
-			std::string operator[]( std::string_view header_name ) {
+			std::string operator[]( std::string_view header_name ) const {
 				return std::find_if( container.begin( ), container.end( ), [ & ]( const std::pair< std::string, std::string >& p ) {
 					return p.first == header_name;
 				} )->second;
 			}
 
-			bool exists( std::string_view header_name ) {
+			bool exists( std::string_view header_name ) const {
 				return std::find_if( container.begin( ), container.end( ), [ & ]( const std::pair< std::string, std::string >& p ) {
 					return p.first == header_name;
 				} ) != container.end( );
@@ -73,16 +73,38 @@ namespace forceinline {
 				if ( headers.exists( "Content-Length" ) )
 					*transmission_finished = body.length( ) >= std::size_t( std::stoi( headers[ "Content-Length" ] ) );
 				else {
-					// Chunked transmission
-					
-					// We need to have the transfer encoding marked as chunked if we didn't receive a content length
+					// Chunked transmission; we need to have the transfer encoding marked as chunked if we didn't receive a content length
 					if ( !headers.exists( "Transfer-Encoding" ) || headers[ "Transfer-Encoding" ] != "chunked" )
 						throw std::exception( "response::response: end of transfer unknown" );
 
-					// End of transmission in chunked encoding is marked via the following chunk at the end
-					std::string chunk_end = "0\r\n\r\n";
-					if ( body.find( "0\r\n\r\n" ) == body.length( ) - chunk_end.length( ) )
-						*transmission_finished = true;
+					auto chunks = split_string( body, "\r\n" );
+					body.clear( );
+
+					// We have to receive a even number of chunks
+					if ( chunks.size( ) % 2 != 0 )
+						return;
+
+					// Iterate chunks; skip body.
+					bool received_last_chunk = false;
+					for ( auto chunk = chunks.begin( ); chunk != chunks.end( ); chunk += 2 ) {
+						auto chunk_length = std::stoull( chunk->data( ), nullptr, 16 );
+						auto chunk_body = chunk + 1;
+
+						// We received the last chunk.
+						if ( chunk_length == 0 && chunk_body->length( ) == 0 ) {
+							received_last_chunk = true;
+							break;
+						}
+
+						// Chunk length must match body length
+						if ( chunk_body->length( ) != chunk_length )
+							return;
+
+						// Append to body
+						body.append( chunk_body->data( ) );
+					}
+
+					*transmission_finished = received_last_chunk;
 				}
 			}
 
