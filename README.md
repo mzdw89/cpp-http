@@ -7,4 +7,5 @@ This project is not completely finished; it may be performing slowly or undefine
 Known issues: 
 - Connection will not be closed by client if the "Connection" header is set to "close" and may be closed unwantedly if it is set to "keep-alive". 
 
-## License This project is licensed under the MIT License. See the license file for further information.
+## License
+This project is licensed under the MIT License. See the license file for further information.
