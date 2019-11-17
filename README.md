@@ -24,6 +24,7 @@ try {
 		std::cout << response.body << std::endl;
 	} );
 
+	// Close the connection after we're done
 	yoursite.close( );
 } catch ( const std::exception& e ) {
 	std::cout << e.what( ) << std::endl; 
