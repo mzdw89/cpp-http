@@ -11,7 +11,7 @@ namespace forceinline {
 
 	void http::connection::connect( ) {
 		if ( WSAStartup( MAKEWORD( 2, 2 ), &m_wsa_data ) != 0 )
-			throw std::exception( "connection::connect: WSAStartup failed" );
+			throw std::exception( "http::connection::connect: WSAStartup failed" );
 
 		addrinfo* result = nullptr, hints = { };
 
@@ -21,17 +21,17 @@ namespace forceinline {
 
 		// Resolve the hostname
 		if ( getaddrinfo( m_hostname.data( ), "80", &hints, &result ) != 0 )
-			throw std::exception( "connection::connect: failed to resolve hostname" );
+			throw std::exception( "http::connection::connect: failed to resolve hostname" );
 
 		// Create a socket
 		m_socket = socket( result->ai_family, result->ai_socktype, result->ai_protocol );
 
 		if ( m_socket == INVALID_SOCKET )
-			throw std::exception( "connection::connect: failed to create socket" );
+			throw std::exception( "http::connection::connect: failed to create socket" );
 
 		// Connect to the HTTP server
 		if ( ::connect( m_socket, result->ai_addr, result->ai_addrlen ) != 0 )
-			throw std::exception( "connection::connect: failed to connect to host" );
+			throw std::exception( "http::connection::connect: failed to connect to host" );
 
 		// Remember to free up the memory at addrinfo
 		freeaddrinfo( result );
@@ -51,7 +51,7 @@ namespace forceinline {
 
 	void http::connection::make_request( http::request* request, std::function< void( const http::response& ) > callback ) {
 		if ( !request )
-			throw std::exception( "connection::make_request: request is nullptr" );
+			throw std::exception( "http::connection::make_request: request is nullptr" );
 
 		// Set the hostname because it's required in HTTP version 1.1
 		request->set_hostname( m_hostname );
@@ -66,7 +66,7 @@ namespace forceinline {
 
 			// Some error occurred, notify the user
 			if ( bytes_sent <= 0 )
-				throw std::exception( "connection::make_request: error sending request" );
+				throw std::exception( "http::connection::make_request: error sending request" );
 			else
 				total_bytes_sent += bytes_sent;
 		} while ( total_bytes_sent < final_request.length( ) );
