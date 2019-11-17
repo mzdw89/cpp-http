@@ -16,7 +16,7 @@ try {
 
 	// Send the request
 	yoursite.make_request( &post_req, [ ]( const http::response& response ) {
-		// Check the request code
+		// Check the response code
 		if ( response.code != 200 )
 			return;
 		
